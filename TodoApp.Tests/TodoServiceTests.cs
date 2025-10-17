@@ -80,15 +80,13 @@ namespace TodoApp.Tests
         {
             ResetServiceData();
             var service = CreateService();
-            // Data Annotation validation is typically done outside the service, 
-            // but we test the service's reliance on a valid model.
-            var task = new TodoTask { Name = "", Priority = 1 };
+            // Test with only whitespace ("  "). Service must be fixed to check for string.IsNullOrWhiteSpace
+            // after trimming to prevent adding an effectively empty task.
+            var task = new TodoTask { Name = "  ", Priority = 1 };
 
-            // Service method doesn't explicitly check empty string, but the API controller ModelState does.
-            // This test is kept to ensure the core logic handles the state.
             var (addedTask, error) = service.AddTask(task);
 
-            // The service prevents adding empty string after trimming logic fix
+            // Assert that the task addition failed (Null addedTask) and returned an error message.
             Assert.Null(addedTask);
             Assert.NotNull(error);
         }

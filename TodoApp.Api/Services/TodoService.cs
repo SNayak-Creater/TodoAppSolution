@@ -58,22 +58,30 @@ namespace TodoApp.Api.Services
 
             // CRITICAL FIX 1: Trim the incoming name before validating or saving
             var trimmedName = task.Name.Trim();
-
-            if (IsDuplicateName(trimmedName))
+            if (!string.IsNullOrWhiteSpace(trimmedName))
             {
-                return (null, $"A task named '{trimmedName}' already exists.");
+
+
+                if (IsDuplicateName(trimmedName))
+                {
+                    return (null, $"A task named '{trimmedName}' already exists.");
+                }
+
+                // ID generation is thread-safe
+                task.Id = Interlocked.Increment(ref _nextId);
+                task.Name = trimmedName;
+                // The status provided by the Model Binder (from the user's POST request) will now be used.
+
+                if (_tasks.TryAdd(task.Id, task))
+                {
+                    return (task, null);
+                }
+                return (null, "Failed to add task due to internal error.");
             }
-
-            // ID generation is thread-safe
-            task.Id = Interlocked.Increment(ref _nextId);
-            task.Name = trimmedName;
-            // The status provided by the Model Binder (from the user's POST request) will now be used.
-
-            if (_tasks.TryAdd(task.Id, task))
+            else
             {
-                return (task, null);
+                return (null, "Failed to add task due to internal error.");
             }
-            return (null, "Failed to add task due to internal error.");
         }
 
         // Updates an existing task

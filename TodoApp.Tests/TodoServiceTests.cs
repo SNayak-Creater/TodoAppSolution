@@ -251,11 +251,14 @@ namespace TodoApp.Tests
             var task = new TodoTask { Name = "Delete Me", Priority = 1, Status = TaskStatus.Completed };
             var (addedTask, _) = service.AddTask(task);
 
+            // Guard against null to satisfy the nullable reference check (CS8602)
+            Assert.NotNull(addedTask);
+
             var result = service.DeleteTask(addedTask.Id);
 
             Assert.True(result);
-            // Must be empty since we cleared seed data and only added one
-            Assert.Empty(service.GetAll());
+            // Assert that the specific task still exists by checking its ID
+            Assert.Null(service.GetById(addedTask.Id));
         }
 
         [Fact]

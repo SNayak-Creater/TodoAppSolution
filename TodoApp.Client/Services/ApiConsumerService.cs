@@ -47,7 +47,10 @@ namespace TodoApp.Client.Services
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
                 var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-                var error = content.GetProperty("errors").GetProperty("Name").EnumerateArray().FirstOrDefault().GetString();
+                //var error = content.GetProperty("errors").GetProperty("Name").EnumerateArray().FirstOrDefault().GetString();
+                // NEW (Directly looking for "Name" key at the root)
+                var errorObject = content.GetProperty("Name").EnumerateArray().FirstOrDefault();
+                var error = errorObject.GetString();
                 return (false, error);
             }
 

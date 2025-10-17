@@ -1,0 +1,110 @@
+﻿@page
+@model TodoApp.Client.Pages.IndexModel
+
+@{
+    ViewData["Title"] = "Todo App";
+}
+
+<h1 class="display-4 text-center mb-4 text-primary">Task Manager</h1>
+
+<div class="row">
+
+    <!-- Add Task Form Column -->
+    <div class="col-md-5 border-end">
+        <h2 class="h4 mb-3 text-secondary">Quick Add Task</h2>
+        <form method="post" asp-page-handler="Add" class="p-3 bg-light rounded shadow-sm">
+
+            <!-- Hidden field for ID (though not strictly needed here, good practice if using a shared model) -->
+            <input type="hidden" asp-for="NewTask.Id" value="0" />
+
+            <div class="form-group mb-3">
+                <label asp-for="NewTask.Name" class="form-label fw-bold">Task Name</label>
+                <input asp-for="NewTask.Name" class="form-control" placeholder="e.g., Deploy to Production" />
+                <span asp-validation-for="NewTask.Name" class="text-danger small"></span>
+            </div>
+
+            <div class="form-group mb-4">
+                <label asp-for="NewTask.Priority" class="form-label fw-bold">Priority (1-100)</label>
+                <input asp-for="NewTask.Priority" class="form-control" type="number" min="1" max="10" value="5" />
+                <span asp-validation-for="NewTask.Priority" class="text-danger small"></span>
+            </div>
+
+            <button type="submit" class="btn btn-primary w-100 shadow-sm">
+                <i class="bi bi-plus-circle-fill"></i> Add Task
+            </button>
+        </form>
+    </div>
+
+    <!-- Task List Column -->
+    <div class="col-md-7">
+        <h2 class="h4 mb-3 text-secondary">Existing Tasks</h2>
+
+        @if (!Model.Tasks.Any())
+        {
+            <div class="alert alert-info text-center">No tasks found. Add a task to get started!</div>
+        }
+        else
+        {
+            <table class="table table-hover table-sm">
+                <thead class="table-dark">
+                    <tr>
+                        <th>ID</th>
+                        <th>Name</th>
+                        <th>Priority</th>
+                        <th>Status</th>
+                        <th class="text-center">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var task in Model.Tasks)
+                    {
+                        <tr>
+                            <td class="align-middle small text-muted">@task.Id</td>
+                            <td class="align-middle">@task.Name</td>
+                            <td class="align-middle text-center">@task.Priority</td>
+                            <td class="align-middle">
+                                @{
+                                    string badgeClass = task.Status switch
+                                    {
+                                        TodoApp.Models.TaskStatus.Completed => "bg-success",
+                                        TodoApp.Models.TaskStatus.InProgress => "bg-warning text-dark",
+                                        _ => "bg-secondary"
+                                    };
+                                }
+                                <span class="badge @badgeClass">
+                                    @task.Status
+                                </span>
+                            </td>
+                            <td class="align-middle text-center" style="width: 150px;">
+
+                                <!-- *** NEW: Edit Link *** -->
+                                <a asp-page="./Edit" asp-route-id="@task.Id" class="btn btn-sm btn-info me-2 shadow-sm" title="Edit Task Details">
+                                    Edit
+                                </a>
+
+                                <!-- Delete Button -->
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@task.Id" style="display:inline;">
+                                    @{
+                                        bool isDeletable = task.Status == TodoApp.Models.TaskStatus.Completed;
+                                        string deleteTitle = isDeletable ? "Delete Task" : "Only completed tasks can be deleted";
+                                    }
+                                    <button type="submit"
+                                            class="btn btn-sm btn-danger shadow-sm"
+                                            @(isDeletable ? "" : "disabled")
+                                            title="@deleteTitle">
+                                        Delete
+                                    </button>
+                                </form>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <!-- Ensures client-side validation scripts are loaded -->
+    <partial name="_ValidationScriptsPartial" />
+}

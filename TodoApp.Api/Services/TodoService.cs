@@ -11,26 +11,28 @@ namespace TodoApp.Api.Services
     {
         // Static dictionary to hold the tasks, shared across all service instances
         private static ConcurrentDictionary<long, TodoTask> _tasks = new ConcurrentDictionary<long, TodoTask>();
-        private static long _nextId = 1;
+        private static long _nextId = 0;
 
         public TodoService()
         {
             // Seed data only if the dictionary is empty
-            if (!_tasks.Any())
+            if (!_tasks.Any()) // Using .Any() to check if the dictionary is empty
             {
-                var task1 = new TodoTask { Id = _nextId++, Name = "Design API", Priority = 1, Status = TaskStatus.Completed };
-                var task2 = new TodoTask { Id = _nextId++, Name = "Implement Services", Priority = 2, Status = TaskStatus.InProgress };
-                var task3 = new TodoTask { Id = _nextId++, Name = "Write Unit Tests", Priority = 3, Status = TaskStatus.NotStarted };
-                _tasks[task1.Id] = task1;
-                _tasks[task2.Id] = task2;
-                _tasks[task3.Id] = task3;
+                // Note: Using Interlocked.Increment ensures thread-safe ID generation
+                var task1 = new TodoTask { Id = Interlocked.Increment(ref _nextId), Name = "Design API", Priority = 1, Status = TaskStatus.Completed };
+                var task2 = new TodoTask { Id = Interlocked.Increment(ref _nextId), Name = "Implement Services", Priority = 2, Status = TaskStatus.InProgress };
+                var task3 = new TodoTask { Id = Interlocked.Increment(ref _nextId), Name = "Write Unit Tests", Priority = 3, Status = TaskStatus.NotStarted };
+
+                _tasks.TryAdd(task1.Id, task1);
+                _tasks.TryAdd(task2.Id, task2);
+                _tasks.TryAdd(task3.Id, task3);
             }
         }
 
         public void ClearAll()
         {
             _tasks.Clear();
-            _nextId = 1; // Reset ID counter
+            _nextId = 0; // Reset ID counter
         }
 
         // --- Core CRUD Operations ---
@@ -48,6 +50,12 @@ namespace TodoApp.Api.Services
         // Adds a new task
         public (TodoTask? Task, string? ErrorMessage) AddTask(TodoTask task)
         {
+            // CRITICAL FIX: Validate that the incoming status is a valid enum value
+            if (!Enum.IsDefined(typeof(TaskStatus), task.Status))
+            {
+                return (null, $"Invalid status value provided: {task.Status}. Status must be a defined member of TaskStatus.");
+            }
+
             // CRITICAL FIX 1: Trim the incoming name before validating or saving
             var trimmedName = task.Name.Trim();
 
@@ -56,9 +64,10 @@ namespace TodoApp.Api.Services
                 return (null, $"A task named '{trimmedName}' already exists.");
             }
 
+            // ID generation is thread-safe
             task.Id = Interlocked.Increment(ref _nextId);
             task.Name = trimmedName;
-            task.Status = TaskStatus.NotStarted; // New tasks always start as NotStarted
+            // The status provided by the Model Binder (from the user's POST request) will now be used.
 
             if (_tasks.TryAdd(task.Id, task))
             {
@@ -73,6 +82,12 @@ namespace TodoApp.Api.Services
             if (!_tasks.TryGetValue(id, out var existingTask))
             {
                 return (null, "Task not found.");
+            }
+
+            // CRITICAL FIX: Validate that the incoming status is a valid enum value
+            if (!Enum.IsDefined(typeof(TaskStatus), updatedTask.Status))
+            {
+                return (null, $"Invalid status value provided: {updatedTask.Status}. Status must be a defined member of TaskStatus.");
             }
 
             // CRITICAL FIX 2: Trim the incoming name before validating or saving

@@ -40,6 +40,7 @@ namespace TodoApp.Client.Pages
                 ModelState.AddModelError("NewTask.Name", error ?? "An unknown API error occurred.");
                 Tasks = (await _apiService.GetTasksAsync()) ?? new List<TodoTask>();
                 return Page();
+                //load only added data
             }
 
             return RedirectToPage();

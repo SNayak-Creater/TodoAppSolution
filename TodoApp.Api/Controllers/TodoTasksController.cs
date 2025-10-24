@@ -14,7 +14,7 @@ public class TodoTasksController : ControllerBase
     [HttpGet]
     public ActionResult<IEnumerable<TodoTask>> GetTasks() => Ok(_service.GetAll());
 
-    // NEW: Action Method to handle client GET request (e.g., GET /api/todotasks/1)
+    // Action Method to handle client GET request (e.g., GET /api/todotasks/1)
     [HttpGet("{id}")]
     public IActionResult GetTask(long id)
     {

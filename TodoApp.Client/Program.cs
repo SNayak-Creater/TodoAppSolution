@@ -19,6 +19,7 @@ builder.Services.AddHttpClient<ApiConsumerService>(client =>
 {
     // FIX: This correctly sets the BaseAddress using the value retrieved from appsettings.json.
     client.BaseAddress = new Uri(apiBaseUrl);
+    client.Timeout = TimeSpan.FromSeconds(300);
 });
 //builder.Services.AddScoped<ApiConsumerService>();
 

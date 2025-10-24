@@ -47,8 +47,7 @@ namespace TodoApp.Client.Services
             if (response.StatusCode == System.Net.HttpStatusCode.Conflict)
             {
                 var content = await response.Content.ReadFromJsonAsync<JsonElement>();
-                //var error = content.GetProperty("errors").GetProperty("Name").EnumerateArray().FirstOrDefault().GetString();
-                // NEW (Directly looking for "Name" key at the root)
+                //  (Directly looking for "Name" key at the root)
                 var errorObject = content.GetProperty("Name").EnumerateArray().FirstOrDefault();
                 var error = errorObject.GetString();
                 return (false, error);
@@ -67,7 +66,7 @@ namespace TodoApp.Client.Services
             return (false, $"API Error: {response.StatusCode}");
         }
 
-        // Existing method for adding a task
+        // Method for adding a task
         public async Task<(bool Success, string? ErrorMessage)> AddTaskAsync(TodoTask task)
         {
             var response = await _httpClient.PostAsJsonAsync("api/todotasks", task);

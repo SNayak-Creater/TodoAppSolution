@@ -7,7 +7,7 @@ namespace TodoApp.Api.Services
 {
     // The service implements a singleton pattern using a static ConcurrentDictionary
     // to simulate a database for demonstration and testing purposes.
-    public class TodoService
+    public class TodoService 
     {
         // Static dictionary to hold the tasks, shared across all service instances
         private static ConcurrentDictionary<long, TodoTask> _tasks = new ConcurrentDictionary<long, TodoTask>();
@@ -146,5 +146,7 @@ namespace TodoApp.Api.Services
                 .Where(t => t.Id != excludeId)
                 .Any(t => t.Name.Trim().ToLowerInvariant() == lowerTrimmedNewName);
         }
+
+        
     }
 }
